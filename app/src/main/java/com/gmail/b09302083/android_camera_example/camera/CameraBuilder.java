@@ -1,6 +1,9 @@
 package com.gmail.b09302083.android_camera_example.camera;
 
+import com.gmail.b09302083.android_camera_example.constant.CameraInitObject;
+import com.gmail.b09302083.android_camera_example.constant.CameraPreViewObject;
 import com.gmail.b09302083.android_camera_example.constant.Constants;
+import com.gmail.b09302083.android_camera_example.factory.ICamera;
 
 import android.content.Context;
 import android.hardware.Camera;
@@ -8,13 +11,14 @@ import android.media.CamcorderProfile;
 import android.support.annotation.IntDef;
 import android.support.annotation.StringDef;
 
+import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
  * Created by b09302083 on 2018/3/24.
  */
-public class CameraBuilder {
+public class CameraBuilder implements ICamera{
 
     @StringDef({
             Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
@@ -54,7 +58,7 @@ public class CameraBuilder {
 
     private CameraSource mCameraSource = null;
 
-    public CameraBuilder(Context context) {
+    public CameraBuilder(Context context, CameraInitObject initObject) {
         if (context == null) {
             throw new IllegalArgumentException("No context supplied.");
         } else {
@@ -62,9 +66,9 @@ public class CameraBuilder {
         }
     }
 
-    public CameraSource build() {
-        return mCameraSource;
-    }
+//    public CameraSource build() {
+//        return mCameraSource;
+//    }
 
     public CameraBuilder setRequestedFps(float fps) {
         if (fps <= 0) {
@@ -107,5 +111,18 @@ public class CameraBuilder {
         return this;
     }
 
+    @Override
+    public void onStart(CameraPreViewObject object) {
+        try {
+            mCameraSource.onStart(object.getPreviewSurfaceTexture());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onStop() {
+
+    }
 
 }

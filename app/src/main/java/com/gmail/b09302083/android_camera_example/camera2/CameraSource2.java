@@ -2,10 +2,9 @@ package com.gmail.b09302083.android_camera_example.camera2;
 
 import com.google.android.gms.common.images.Size;
 
-import com.gmail.b09302083.android_camera_example.camera.CameraSourcePreview;
 import com.gmail.b09302083.android_camera_example.chillingvantextureView.CameraPreviewTextureView;
 import com.gmail.b09302083.android_camera_example.constant.Constants;
-import com.gmail.b09302083.android_camera_example.interfacefunc.CameraCallback;
+import com.gmail.b09302083.android_camera_example.factory.ICameraDataCallback;
 import com.gmail.b09302083.android_camera_example.utils.ScreenUtil;
 
 import android.Manifest;
@@ -37,7 +36,6 @@ import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.util.SparseIntArray;
 import android.view.Surface;
 
 import java.io.IOException;
@@ -67,7 +65,7 @@ public class CameraSource2 {
 
     private static final double maxRatioTolerance = 0.18;
 
-    private CameraCallback mCameraCallback;
+    private ICameraDataCallback mICameraDataCallback;
 
     private boolean isMeteringAreaAFSupported = false;
 
@@ -135,8 +133,27 @@ public class CameraSource2 {
             throw new IllegalArgumentException("No context supplied.");
         } else {
             this.mContext = context;
-            this.mCameraCallback = (CameraCallback) mContext;
+            this.mICameraDataCallback = (ICameraDataCallback) mContext;
         }
+    }
+
+    public CameraSource2 onStart(@NonNull CameraPreviewTextureView textureView, @NonNull SurfaceTexture surfaceTexture ,SurfaceTexture _offScreenSurfaceTexture,int displayOrientation) throws IOException {
+        mDisplayOrientation = displayOrientation;
+        if(ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            if (cameraStarted) {
+                return this;
+            }
+            cameraStarted = true;
+            startBackgroundThread();
+
+            mTextureView = textureView;
+            previewSurfaceTexture = surfaceTexture;
+            offScreenSurfaceTexture = _offScreenSurfaceTexture;
+            if (mTextureView.isAvailable()) {
+                setUpCameraOutputs(mTextureView.getWidth(), mTextureView.getHeight());
+            }
+        }
+        return this;
     }
 
     public CameraSource2 onStart(@NonNull AutoFitTextureView textureView, int displayOrientation) throws IOException {
@@ -293,17 +310,17 @@ public class CameraSource2 {
             // We fit the aspect ratio of TextureView to the size of preview we picked.
             int orientation = mDisplayOrientation;
 
-            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                mAutoFitTextureView.setAspectRatio(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-            } else {
-                mAutoFitTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
-            }
-
 //            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//                mTextureView.setAspectRatio(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+//                mAutoFitTextureView.setAspectRatio(mPreviewSize.getWidth(), mPreviewSize.getHeight());
 //            } else {
-//                mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
+//                mAutoFitTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
 //            }
+
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                mTextureView.setAspectRatio(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+            } else {
+                mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
+            }
 
             // Check if the flash is supported.
             Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
@@ -433,7 +450,7 @@ public class CameraSource2 {
             if(mImage == null) {
                 return;
             }else {
-                mCameraCallback.camera2Callback(reader);
+                mICameraDataCallback.camera2Callback(reader);
                 mImage.close();
             }
         }
@@ -480,9 +497,9 @@ public class CameraSource2 {
     private void createCameraPreviewSession() {
         try {
 //            SurfaceTexture texture = mTextureView.getSurfaceTexture();
-            SurfaceTexture autoFitTextureView = mAutoFitTextureView.getSurfaceTexture();
-            autoFitTextureView.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-            Surface autoFitSurface = new Surface(autoFitTextureView);
+//            SurfaceTexture autoFitTextureView = mAutoFitTextureView.getSurfaceTexture();
+//            autoFitTextureView.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+//            Surface autoFitSurface = new Surface(autoFitTextureView);
 
             mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 
@@ -504,19 +521,19 @@ public class CameraSource2 {
 //            assert offscreenTexture != null;
             // We configure the size of default buffer to be the size of camera preview we want.
 
-//            offScreenSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-//            Surface offScreenSurface = new Surface(offScreenSurfaceTexture);
-//            mPreviewRequestBuilder.addTarget(offScreenSurface);//stream package
+            offScreenSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+            Surface offScreenSurface = new Surface(offScreenSurfaceTexture);
+            mPreviewRequestBuilder.addTarget(offScreenSurface);//stream package
 
             mImageReaderPreview = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.YUV_420_888, 1);
             mImageReaderPreview.setOnImageAvailableListener(mOnPreviewAvailableListener, mBackgroundHandler);
             mPreviewRequestBuilder.addTarget(mImageReaderPreview.getSurface());//face detect or zbar code.
-            mPreviewRequestBuilder.addTarget(autoFitSurface);
+//            mPreviewRequestBuilder.addTarget(autoFitSurface);
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(
-//                    Arrays.asList(previewSurface ,offScreenSurface , mImageReaderPreview.getSurface(), mImageReaderStill.getSurface() ),
-                    Arrays.asList(autoFitSurface , mImageReaderPreview.getSurface(), mImageReaderStill.getSurface() ),
+                    Arrays.asList(previewSurface ,offScreenSurface , mImageReaderPreview.getSurface(), mImageReaderStill.getSurface() ),
+//                    Arrays.asList(autoFitSurface , mImageReaderPreview.getSurface(), mImageReaderStill.getSurface() ),
                     new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {

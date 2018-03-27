@@ -1,48 +1,36 @@
 package com.gmail.b09302083.android_camera_example;
 
-import com.chillingvan.canvasgl.Loggers;
 import com.chillingvan.canvasgl.glcanvas.RawTexture;
 import com.chillingvan.canvasgl.glview.texture.GLSurfaceTextureProducerView;
 import com.chillingvan.canvasgl.glview.texture.gles.EglContextWrapper;
 import com.chillingvan.canvasgl.glview.texture.gles.GLThread;
-import com.gmail.b09302083.android_camera_example.camera.CameraBuilder;
-import com.gmail.b09302083.android_camera_example.camera.CameraSource;
-import com.gmail.b09302083.android_camera_example.camera.CameraSourcePreview;
-import com.gmail.b09302083.android_camera_example.camera2.Camera2Builder;
-import com.gmail.b09302083.android_camera_example.camera2.CameraSource2;
-import com.gmail.b09302083.android_camera_example.camera2.CameraSource2Preview;
 import com.gmail.b09302083.android_camera_example.chillingvantextureView.CameraPreviewTextureView;
 import com.gmail.b09302083.android_camera_example.chillingvantextureView.EncoderCanvas;
+import com.gmail.b09302083.android_camera_example.constant.CameraInitObject;
+import com.gmail.b09302083.android_camera_example.constant.CameraPreViewObject;
 import com.gmail.b09302083.android_camera_example.constant.Constants;
 import com.gmail.b09302083.android_camera_example.encoder.MyBaseEncoder;
 import com.gmail.b09302083.android_camera_example.encoder.MyVideoEncoder;
-import com.gmail.b09302083.android_camera_example.interfacefunc.CameraCallback;
+import com.gmail.b09302083.android_camera_example.factory.CameraFactory;
+import com.gmail.b09302083.android_camera_example.factory.ICameraDataCallback;
+import com.gmail.b09302083.android_camera_example.utils.CrashHandler;
+import com.gmail.b09302083.android_camera_example.utils.ScreenUtil;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.media.ImageReader;
 import android.media.MediaFormat;
-import android.os.Build;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.View;
 
-import java.io.IOException;
-
-public class MainActivity extends AppCompatActivity implements CameraCallback {
+public class MainActivity extends AppCompatActivity implements ICameraDataCallback {
     private String TAG = this.getClass().getSimpleName();
 
     private CameraPreviewTextureView txv_cameraPreviewWithFilter;
-
-    private CameraSourcePreview mPreview;
-
-    private CameraSource2Preview mPreview2;
 
     private SurfaceTexture previewSurfaceTexture;
 
@@ -58,28 +46,78 @@ public class MainActivity extends AppCompatActivity implements CameraCallback {
 
     private RawTexture offScreenRawTexture;
 
-    private boolean useCamera2 = true;
-
-    private CameraSource mCameraSource;
+    private CameraFactory.CameraType cameraType = CameraFactory.CameraType.CAMERA_1;
 
     private MyVideoEncoder myVideoEncoderStream1;
 
-    private CameraSource2 mCameraSource2;
+    private boolean usingFrontCamera = false;
+
+    private CameraInitObject initObject;
+
+    private CameraPreViewObject previewObject = new CameraPreViewObject();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (useCamera2) {
-            initEncode();
-            createCameraSource2();
-        } else {
-            createCameraSource();
+
+        initObject = new CameraInitObject(MainActivity.this);
+        if (usingFrontCamera) {
+            initObject.setFacing(Constants.CAMERA_FACING_FRONT);
         }
 
+        //Crash Handler write output file.
+        CrashHandler.init(getApplicationContext());
+        initEncode();
+
+
         findView();
-//        setListener();
+        setListener();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG, "AAA_onStart");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "AAA_onStop");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "AAA_onResume");
+        if (orientationListener != null && orientationListener.canDetectOrientation()) {
+            orientationListener.enable();
+        }
+        if (txv_cameraPreviewWithFilter != null) {
+            txv_cameraPreviewWithFilter.onResume();
+        }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "AAA_onDestroy");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "AAA_onPause");
+        if (orientationListener != null) {
+            orientationListener.disable();
+        }
+        if (txv_cameraPreviewWithFilter != null) {
+            txv_cameraPreviewWithFilter.onPause();
+        }
+
     }
 
     private void initEncode() {
@@ -97,165 +135,109 @@ public class MainActivity extends AppCompatActivity implements CameraCallback {
         }
     }
 
-    private void createCameraSource() {
-
-        CameraBuilder builder = new CameraBuilder(MainActivity.this)
-                .setFacing(Constants.CAMERA_FACING_BACK)
-                .setPreviewSize(1920, 1080);
-        mCameraSource = builder.build();
-
-//        if(previewSurfaceTexture != null) {
-//            try {
-//                mCameraSource.onStart(previewSurfaceTexture);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
-    }
-
-    private void createCameraSource2() {
-
-        Camera2Builder builder = new Camera2Builder(MainActivity.this)
-                .setFacing(Constants.CAMERA_FACING_BACK);
-        mCameraSource2 = builder.build();
-    }
-
-
     private void findView() throws SecurityException{
-
-//        txv_cameraPreviewWithFilter = (CameraPreviewTextureView) findViewById(
-//                R.id.txv_camera_preview_with_filter);
-//        mPreview = (CameraSourcePreview) findViewById(R.id.preview);
-        mPreview2 = (CameraSource2Preview) findViewById(R.id.preview2);
-
-        if (useCamera2) {
-
-//            mPreview.setVisibility(View.GONE);
-
-            if(mCameraSource2.isCamera2Native()) {
-                try {
-                    mPreview2.onStart(mCameraSource2);
-                } catch (IOException e) {
-                    Log.e(TAG, "Unable to start camera source 2.", e);
-                    mCameraSource2.onStop();
-                    mCameraSource2 = null;
-                }
-            }
-
-//            orientationListener = new OrientationEventListener(this,
-//                    SensorManager.SENSOR_DELAY_NORMAL) {
-//                @Override
-//                public void onOrientationChanged(int orientation) {
-////                if (txv_cameraPreviewWithFilter != null && txv_cameraPreviewWithFilter.isAvailable()) {
-////                    configureTransform(txv_cameraPreviewWithFilter, txv_cameraPreviewWithFilter.getWidth(), txv_cameraPreviewWithFilter.getHeight());
-////                }
-//
-//                }
-//            };
-        } else {
-//            txv_cameraPreviewWithFilter.setVisibility(View.GONE);
-
-            try {
-                mPreview.start(mCameraSource);
-            } catch (IOException e) {
-                Log.e(TAG, "Unable to start camera source.", e);
-                mCameraSource.onStop();
-                mCameraSource = null;
-            }
-
-        }
-
+        txv_cameraPreviewWithFilter = (CameraPreviewTextureView) findViewById(R.id.txv_camera_preview_with_filter);
 
     }
 
     private void setListener() {
 
-        if(useCamera2) {
-            txv_cameraPreviewWithFilter.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "txv_cameraPreviewWithFilter onClick");
-                }
-            });
-            txv_cameraPreviewWithFilter.setOnCreateGLContextListener(new GLThread.OnCreateGLContextListener() {
-                @Override
-                public void onCreate(EglContextWrapper eglContext) {
-                    Log.d(TAG, "setOnCreateGLContextListener");
-                    previewEglCtx = eglContext;
-                }
-            });
-            //txv_cameraPreviewWithFilter.setTextureFilter(new PixelationFilter(15));
-
-
-            txv_cameraPreviewWithFilter.setOnSurfaceTextureSet(new CameraPreviewTextureView.OnSurfaceTextureSet() {
-                @Override
-                public void onSet(SurfaceTexture surfaceTexture, RawTexture surfaceTextureRelatedTexture) {
-                    Log.d(TAG, "setOnSurfaceTextureSet");
-                    //set Preview
-                    previewSurfaceTexture = surfaceTexture;
-                    previewRawTexture = surfaceTextureRelatedTexture;
-
-                    if(useCamera2) {
-
-                    } else {
-                        createCameraSource();
-                    }
+        orientationListener = new OrientationEventListener(this,
+                SensorManager.SENSOR_DELAY_NORMAL) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                Log.d(TAG,"onOrientationChanged value: " + orientation);
+            }
+        };
 
 
 
-                    surfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                        @Override
-                        public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                            //Log.d(TAG,"preview_onFrameAvailable");
-                            txv_cameraPreviewWithFilter.requestRenderAndWait();
+        txv_cameraPreviewWithFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        txv_cameraPreviewWithFilter.setOnCreateGLContextListener(new GLThread.OnCreateGLContextListener() {
+            @Override
+            public void onCreate(EglContextWrapper eglContext) {
+                Log.d(TAG, "AAA_txv_cameraPreviewWithFilter_onCreate");
+                previewEglCtx = eglContext;
+
+
+            }
+        });
+        //txv_cameraPreviewWithFilter.setTextureFilter(new PixelationFilter(15));
+
+
+        txv_cameraPreviewWithFilter.setOnSurfaceTextureSet(new CameraPreviewTextureView.OnSurfaceTextureSet() {
+            @Override
+            public void onSet(SurfaceTexture surfaceTexture, RawTexture surfaceTextureRelatedTexture) {
+                Log.d(TAG, "AAA_txv_cameraPreviewWithFilter_onSet");
+                //set Preview
+                previewSurfaceTexture = surfaceTexture;
+                previewRawTexture = surfaceTextureRelatedTexture;
+                Log.d(TAG, String.format("onSet: "));
+                surfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+                    @Override
+                    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+                        //Log.d(TAG,"preview_onFrameAvailable");
+                        txv_cameraPreviewWithFilter.requestRenderAndWait();
 //                        if(myVideoEncoderStream1!=null)
 //                            myVideoEncoderStream1.requestRenderAndWait();
 
-                            if (offScreenCanvasWithFilter != null)
-                                offScreenCanvasWithFilter.requestRenderAndWait();
-                        }
-                    });
-
-                    if (useCamera2) {
-//                    offScreenCanvasWithFilter = new EncoderCanvas(myVideoEncoderStream1.getMyMediaCodecWrapper().width, myVideoEncoderStream1.getMyMediaCodecWrapper().height, myVideoEncoderStream1.getMyMediaCodecWrapper().encoderSurface);
-                    } else {
-                        offScreenCanvasWithFilter = new EncoderCanvas(myVideoEncoderStream1.getMyMediaCodecWrapper().width, myVideoEncoderStream1.getMyMediaCodecWrapper().height, previewEglCtx, myVideoEncoderStream1.getMyMediaCodecWrapper().encoderSurface);
-                        offScreenCanvasWithFilter.setSharedTexture(previewRawTexture, previewSurfaceTexture);
+                        if (offScreenCanvasWithFilter != null)
+                            offScreenCanvasWithFilter.requestRenderAndWait();
                     }
+                });
 
-
-                    offScreenCanvasWithFilter.setOnCreateGLContextListener(new GLThread.OnCreateGLContextListener() {
-                        @Override
-                        public void onCreate(EglContextWrapper eglContext) {
-                            Log.d(TAG, "aaa_offScreenCanvas_oncreate");
-                        }
-                    });
-                    offScreenCanvasWithFilter.setOnSurfaceTextureSet(new GLSurfaceTextureProducerView.OnSurfaceTextureSet() {
-                        @Override
-                        public void onSet(SurfaceTexture surfaceTexture, RawTexture surfaceTextureRelatedTexture) {
-                            Log.d(TAG, "aaa_offScreenCanvas_onSet");
-                            offScreenSurfaceTexture = surfaceTexture;
-                            offScreenRawTexture = surfaceTextureRelatedTexture;
-                            surfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                                @Override
-                                public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                                    Log.d(TAG, "onFrameAvailable");
-                                    offScreenCanvasWithFilter.requestRenderAndWait();
-                                }
-                            });
-
-                        }
-                    });
-
-                    offScreenCanvasWithFilter.start();
-                    offScreenCanvasWithFilter.onResume();
-
+//                configureTransform(txv_cameraPreviewWithFilter, txv_cameraPreviewWithFilter.getWidth(), txv_cameraPreviewWithFilter.getHeight());
+                if (CameraFactory.CameraType.CAMERA_2.equals(cameraType)) {
+                    offScreenCanvasWithFilter = new EncoderCanvas(myVideoEncoderStream1.getMyMediaCodecWrapper().width,
+                            myVideoEncoderStream1.getMyMediaCodecWrapper().height,
+                            myVideoEncoderStream1.getMyMediaCodecWrapper().encoderSurface);
+                } else {
+                    offScreenCanvasWithFilter = new EncoderCanvas(myVideoEncoderStream1.getMyMediaCodecWrapper().width,
+                            myVideoEncoderStream1.getMyMediaCodecWrapper().height, previewEglCtx,
+                            myVideoEncoderStream1.getMyMediaCodecWrapper().encoderSurface);
+                    offScreenCanvasWithFilter.setSharedTexture(previewRawTexture, previewSurfaceTexture);
                 }
-            });
-        } else{
+                offScreenCanvasWithFilter.setOnCreateGLContextListener(new GLThread.OnCreateGLContextListener() {
+                    @Override
+                    public void onCreate(EglContextWrapper eglContext) {
+                        Log.d(TAG, "aaa_offScreenCanvas_oncreate");
+                    }
+                });
+                offScreenCanvasWithFilter.setOnSurfaceTextureSet(new GLSurfaceTextureProducerView.OnSurfaceTextureSet() {
+                    @Override
+                    public void onSet(SurfaceTexture surfaceTexture, RawTexture surfaceTextureRelatedTexture) {
+                        Log.d(TAG, "aaa_offScreenCanvas_onSet");
+                        offScreenSurfaceTexture = surfaceTexture;
+                        offScreenRawTexture = surfaceTextureRelatedTexture;
+                        surfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+                            @Override
+                            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+                                offScreenCanvasWithFilter.requestRenderAndWait();
+                            }
+                        });
 
-        }
+                        ///在這裡才可以正式開啟camera
+
+                        previewObject.setCameraPreviewTextureView(txv_cameraPreviewWithFilter);
+                        previewObject.setPreviewSurfaceTexture(previewSurfaceTexture);
+                        previewObject.setOffScreenSurfaceTexture(offScreenSurfaceTexture);
+                        previewObject.setDisplayOrientation(ScreenUtil.getScreenRotation(MainActivity.this));
+
+                        CameraFactory.getCamera(cameraType, initObject).onStart(previewObject);
+                        myVideoEncoderStream1.startCodec();
+                    }
+                });
+
+                offScreenCanvasWithFilter.start();
+                offScreenCanvasWithFilter.onResume();
+
+            }
+        });
 
 
 

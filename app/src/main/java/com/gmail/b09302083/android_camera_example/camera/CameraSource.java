@@ -3,7 +3,7 @@ package com.gmail.b09302083.android_camera_example.camera;
 import com.google.android.gms.common.images.Size;
 
 import com.gmail.b09302083.android_camera_example.constant.Constants;
-import com.gmail.b09302083.android_camera_example.interfacefunc.CameraCallback;
+import com.gmail.b09302083.android_camera_example.factory.ICameraDataCallback;
 
 import android.content.Context;
 import android.graphics.ImageFormat;
@@ -45,7 +45,7 @@ public class CameraSource {
 
     private final Object mCameraObjectLock = new Object();
 
-    private CameraCallback mCameraCallback;
+    private ICameraDataCallback mICameraDataCallback;
 
     private int mRotation;
 
@@ -66,7 +66,7 @@ public class CameraSource {
             throw new IllegalArgumentException("No context supplied.");
         } else {
             this.mContext = context;
-            this.mCameraCallback = (CameraCallback) mContext;
+            this.mICameraDataCallback = (ICameraDataCallback) mContext;
         }
     }
 
@@ -204,7 +204,7 @@ public class CameraSource {
         public void onPreviewFrame(byte[] data, Camera camera) {
             Log.d(TAG,"CameraPreviewCallback onPreviewFrame!!!");
 
-            mCameraCallback.cameraCallback(data, camera);
+            mICameraDataCallback.cameraCallback(data, camera);
 
             mCamera.addCallbackBuffer(data);
         }
