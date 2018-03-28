@@ -151,12 +151,11 @@ public class CameraSource {
         return this;
     }
 
-    public CameraSource onStart(SurfaceTexture _previewSurfaceTexture) throws IOException {
+    public CameraSource onStart() throws IOException {
         synchronized (mCameraObjectLock) {
             if (mCamera != null) {
                 return this;
             }
-            this.previewSurfaceTexture = _previewSurfaceTexture;
             mCamera = createCamera();
 
             try {
@@ -421,5 +420,9 @@ public class CameraSource {
 
         mBytesToByteBuffer.put(byteArray, buffer);
         return byteArray;
+    }
+
+    public void setPreviewSurfaceTexture(SurfaceTexture previewSurfaceTexture) {
+        this.previewSurfaceTexture = previewSurfaceTexture;
     }
 }

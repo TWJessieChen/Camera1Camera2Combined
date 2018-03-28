@@ -1,9 +1,8 @@
 package com.gmail.b09302083.android_camera_example.constant;
 
-import com.gmail.b09302083.android_camera_example.camera.CameraSourcePreview;
-import com.gmail.b09302083.android_camera_example.camera2.CameraSource2Preview;
 import com.gmail.b09302083.android_camera_example.chillingvantextureView.CameraPreviewTextureView;
 
+import android.content.Context;
 import android.graphics.SurfaceTexture;
 
 import java.io.Serializable;
@@ -11,7 +10,21 @@ import java.io.Serializable;
 /**
  * Created by po-chunchen on 2018/3/27.
  */
-public class CameraPreViewObject implements Serializable {
+public class CameraSettingData implements Serializable {
+
+    private Context context;
+
+    private int focusMode = -1;
+
+    private int flashMode = -1;
+
+    private int facing = Constants.CAMERA_FACING_BACK;
+
+    private float fps = 30.0f;
+
+    private int width = 1920;
+
+    private int height = 1080;
 
     private SurfaceTexture previewSurfaceTexture = null;
 
@@ -22,6 +35,62 @@ public class CameraPreViewObject implements Serializable {
     private CameraPreviewTextureView cameraPreviewTextureView = null;
 
     private int displayOrientation;
+
+    public CameraSettingData(Context _context){
+        this.context = _context;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public int getFocusMode() {
+        return focusMode;
+    }
+
+    public void setFocusMode(int focusMode) {
+        this.focusMode = focusMode;
+    }
+
+    public int getFlashMode() {
+        return flashMode;
+    }
+
+    public void setFlashMode(int flashMode) {
+        this.flashMode = flashMode;
+    }
+
+    public int getFacing() {
+        return facing;
+    }
+
+    public void setFacing(int facing) {
+        this.facing = facing;
+    }
+
+    public float getFps() {
+        return fps;
+    }
+
+    public void setFps(float fps) {
+        this.fps = fps;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
 
     public SurfaceTexture getPreviewSurfaceTexture() {
         return previewSurfaceTexture;

@@ -1,11 +1,10 @@
 package com.gmail.b09302083.android_camera_example.camera;
 
-import com.gmail.b09302083.android_camera_example.constant.CameraInitObject;
-import com.gmail.b09302083.android_camera_example.constant.CameraPreViewObject;
 import com.gmail.b09302083.android_camera_example.constant.Constants;
 import com.gmail.b09302083.android_camera_example.factory.ICamera;
 
 import android.content.Context;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.support.annotation.IntDef;
@@ -58,7 +57,7 @@ public class CameraBuilder implements ICamera{
 
     private CameraSource mCameraSource = null;
 
-    public CameraBuilder(Context context, CameraInitObject initObject) {
+    public CameraBuilder(Context context) {
         if (context == null) {
             throw new IllegalArgumentException("No context supplied.");
         } else {
@@ -80,11 +79,17 @@ public class CameraBuilder implements ICamera{
     }
 
     public CameraBuilder setFocusMode(@FocusMode String mode) {
+        if (mode == null) {
+            throw new IllegalArgumentException("Invalid FocusMode is null!!");
+        }
         mCameraSource.setFocusMode(mode);
         return this;
     }
 
     public CameraBuilder setFlashMode(@FlashMode String mode) {
+        if (mode == null) {
+            throw new IllegalArgumentException("Invalid FlashMode is null!!");
+        }
         mCameraSource.setFlashMode(mode);
         return this;
     }
@@ -94,6 +99,15 @@ public class CameraBuilder implements ICamera{
             throw new IllegalArgumentException("Invalid camera: " + facing);
         }
         mCameraSource.setFacing(facing);
+        return this;
+    }
+
+    public CameraBuilder setPreviewSurfaceTexture(SurfaceTexture _surfaceTexture) {
+        if (_surfaceTexture == null) {
+            throw new IllegalArgumentException("Invalid camera SurfaceTexture is null!!");
+        }
+        mCameraSource.setPreviewSurfaceTexture(_surfaceTexture);
+
         return this;
     }
 
@@ -112,9 +126,9 @@ public class CameraBuilder implements ICamera{
     }
 
     @Override
-    public void onStart(CameraPreViewObject object) {
+    public void onStart() {
         try {
-            mCameraSource.onStart(object.getPreviewSurfaceTexture());
+            mCameraSource.onStart();
         } catch (IOException e) {
             e.printStackTrace();
         }

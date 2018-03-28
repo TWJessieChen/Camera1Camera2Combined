@@ -173,7 +173,7 @@ public class CameraSource2 {
         return this;
     }
 
-    private CameraSource2 onStart() throws
+    public CameraSource2 onStart() throws
             IOException {
         if(ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             if (cameraStarted) {
@@ -780,7 +780,7 @@ public class CameraSource2 {
         this.previewSurfaceTexture = previewSurfaceTexture;
     }
 
-    public void setTextureView(
+    public void setCameraPreviewTextureView(
             CameraPreviewTextureView textureView) {
         mTextureView = textureView;
     }

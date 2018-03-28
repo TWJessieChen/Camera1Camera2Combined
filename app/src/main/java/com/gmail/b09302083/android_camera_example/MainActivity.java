@@ -6,12 +6,12 @@ import com.chillingvan.canvasgl.glview.texture.gles.EglContextWrapper;
 import com.chillingvan.canvasgl.glview.texture.gles.GLThread;
 import com.gmail.b09302083.android_camera_example.chillingvantextureView.CameraPreviewTextureView;
 import com.gmail.b09302083.android_camera_example.chillingvantextureView.EncoderCanvas;
-import com.gmail.b09302083.android_camera_example.constant.CameraInitObject;
-import com.gmail.b09302083.android_camera_example.constant.CameraPreViewObject;
+import com.gmail.b09302083.android_camera_example.constant.CameraSettingData;
 import com.gmail.b09302083.android_camera_example.constant.Constants;
 import com.gmail.b09302083.android_camera_example.encoder.MyBaseEncoder;
 import com.gmail.b09302083.android_camera_example.encoder.MyVideoEncoder;
 import com.gmail.b09302083.android_camera_example.factory.CameraFactory;
+import com.gmail.b09302083.android_camera_example.factory.ICamera;
 import com.gmail.b09302083.android_camera_example.factory.ICameraDataCallback;
 import com.gmail.b09302083.android_camera_example.utils.CrashHandler;
 import com.gmail.b09302083.android_camera_example.utils.ScreenUtil;
@@ -52,9 +52,9 @@ public class MainActivity extends AppCompatActivity implements ICameraDataCallba
 
     private boolean usingFrontCamera = false;
 
-    private CameraInitObject initObject;
+    private CameraSettingData settingData;
 
-    private CameraPreViewObject previewObject = new CameraPreViewObject();
+    private static ICamera sICamera = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,9 +62,9 @@ public class MainActivity extends AppCompatActivity implements ICameraDataCallba
         setContentView(R.layout.activity_main);
 
 
-        initObject = new CameraInitObject(MainActivity.this);
+        settingData = new CameraSettingData(MainActivity.this);
         if (usingFrontCamera) {
-            initObject.setFacing(Constants.CAMERA_FACING_FRONT);
+            settingData.setFacing(Constants.CAMERA_FACING_FRONT);
         }
 
         //Crash Handler write output file.
@@ -223,12 +223,13 @@ public class MainActivity extends AppCompatActivity implements ICameraDataCallba
 
                         ///在這裡才可以正式開啟camera
 
-                        previewObject.setCameraPreviewTextureView(txv_cameraPreviewWithFilter);
-                        previewObject.setPreviewSurfaceTexture(previewSurfaceTexture);
-                        previewObject.setOffScreenSurfaceTexture(offScreenSurfaceTexture);
-                        previewObject.setDisplayOrientation(ScreenUtil.getScreenRotation(MainActivity.this));
+                        settingData.setCameraPreviewTextureView(txv_cameraPreviewWithFilter);
+                        settingData.setPreviewSurfaceTexture(previewSurfaceTexture);
+                        settingData.setOffScreenSurfaceTexture(offScreenSurfaceTexture);
+                        settingData.setDisplayOrientation(ScreenUtil.getScreenRotation(MainActivity.this));
 
-                        CameraFactory.getCamera(cameraType, initObject).onStart(previewObject);
+                        sICamera = CameraFactory.getCamera(cameraType, settingData);
+                        sICamera.onStart();
                         myVideoEncoderStream1.startCodec();
                     }
                 });
