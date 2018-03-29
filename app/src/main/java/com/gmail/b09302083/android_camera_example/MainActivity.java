@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements ICameraDataCallba
                         settingData.setDisplayOrientation(ScreenUtil.getScreenRotation(MainActivity.this));
 
                         sICamera = CameraFactory.getCamera(cameraType, settingData);
+
                         sICamera.onStart();
                         myVideoEncoderStream1.startCodec();
                     }

@@ -68,6 +68,11 @@ public class Camera2Builder implements ICamera {
         return this;
     }
 
+    public Camera2Builder setCameraSourceCallback(boolean isUseCallback) {
+        mCameraSource.setCameraSourceCallBack(isUseCallback);
+        return this;
+    }
+
     @Override
     public void onStart() {
         if (mCameraSource.isCamera2Native()) {

@@ -30,8 +30,9 @@ public class CameraFactory {
                     switch (aCameraType){
                         case CAMERA_1:
                             Log.d(TAG,"Camera1");
-                            sICamera = new CameraBuilder(settingData.getContext()).
-                                    setPreviewSurfaceTexture(settingData.getPreviewSurfaceTexture());
+                            sICamera = new CameraBuilder(settingData.getContext())
+                                    .setPreviewSurfaceTexture(settingData.getPreviewSurfaceTexture())
+                                    .setCameraSourceCallback(settingData.isUseCameraCallback());
                             break;
                         case CAMERA_2:
                             Log.d(TAG,"Camera2");
@@ -39,7 +40,8 @@ public class CameraFactory {
                             .setDisplayOrientation(settingData.getDisplayOrientation())
                             .setOffScreenSurfaceTexture(settingData.getOffScreenSurfaceTexture())
                             .setPreviewSurfaceTexture(settingData.getPreviewSurfaceTexture())
-                            .setCameraPreviewTextureView(settingData.getCameraPreviewTextureView());
+                            .setCameraPreviewTextureView(settingData.getCameraPreviewTextureView())
+                            .setCameraSourceCallback(settingData.isUseCameraCallback());
                             break;
                     }
                 }

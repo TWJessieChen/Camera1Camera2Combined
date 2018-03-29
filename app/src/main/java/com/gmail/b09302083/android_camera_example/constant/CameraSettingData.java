@@ -36,6 +36,8 @@ public class CameraSettingData implements Serializable {
 
     private int displayOrientation;
 
+    private boolean isUseCameraCallback = true;
+
     public CameraSettingData(Context _context){
         this.context = _context;
     }
@@ -131,5 +133,13 @@ public class CameraSettingData implements Serializable {
     public void setCameraPreviewTextureView(
             CameraPreviewTextureView cameraPreviewTextureView) {
         this.cameraPreviewTextureView = cameraPreviewTextureView;
+    }
+
+    public boolean isUseCameraCallback() {
+        return isUseCameraCallback;
+    }
+
+    public void setUseCameraCallback(boolean useCameraCallback) {
+        isUseCameraCallback = useCameraCallback;
     }
 }

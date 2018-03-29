@@ -111,6 +111,11 @@ public class CameraBuilder implements ICamera{
         return this;
     }
 
+    public CameraBuilder setCameraSourceCallback(boolean isUseCallback) {
+        mCameraSource.setCameraSourceCallBack(isUseCallback);
+        return this;
+    }
+
     public CameraBuilder setPreviewSize(int width, int height) {
         // Restrict the requested range to something within the realm of possibility.  The
         // choice of 1000000 is a bit arbitrary -- intended to be well beyond resolutions that

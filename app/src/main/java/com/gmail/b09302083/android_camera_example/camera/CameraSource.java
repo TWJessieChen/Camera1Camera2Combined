@@ -66,7 +66,7 @@ public class CameraSource {
             throw new IllegalArgumentException("No context supplied.");
         } else {
             this.mContext = context;
-            this.mICameraDataCallback = (ICameraDataCallback) mContext;
+//            this.mICameraDataCallback = (ICameraDataCallback) mContext;
         }
     }
 
@@ -203,7 +203,9 @@ public class CameraSource {
         public void onPreviewFrame(byte[] data, Camera camera) {
             Log.d(TAG,"CameraPreviewCallback onPreviewFrame!!!");
 
-            mICameraDataCallback.cameraCallback(data, camera);
+            if(mICameraDataCallback != null) {
+                mICameraDataCallback.cameraCallback(data, camera);
+            }
 
             mCamera.addCallbackBuffer(data);
         }
@@ -239,6 +241,12 @@ public class CameraSource {
 
     public void setPreviewHeight(int previewHeight) {
         mPreviewHeight = previewHeight;
+    }
+
+    public void setCameraSourceCallBack(boolean isUseCallback) {
+        if(isUseCallback) {
+            this.mICameraDataCallback = (ICameraDataCallback) mContext;
+        }
     }
 
     private static int getIdForRequestedCamera(int facing) {

@@ -450,7 +450,10 @@ public class CameraSource2 {
             if(mImage == null) {
                 return;
             }else {
-                mICameraDataCallback.camera2Callback(reader);
+                if(mICameraDataCallback != null) {
+                    mICameraDataCallback.camera2Callback(reader);
+                }
+
                 mImage.close();
             }
         }
@@ -795,6 +798,12 @@ public class CameraSource2 {
 
     public void setFacing(int facing) {
         mFacing = facing;
+    }
+
+    public void setCameraSourceCallBack(boolean isUseCallback) {
+        if(isUseCallback) {
+            this.mICameraDataCallback = (ICameraDataCallback) mContext;
+        }
     }
 
     public interface AutoFocusCallback {
