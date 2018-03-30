@@ -451,7 +451,7 @@ public class CameraSource2 {
                 return;
             }else {
                 if(mICameraDataCallback != null) {
-                    mICameraDataCallback.camera2Callback(reader);
+                    mICameraDataCallback.camera2Callback(mImage);
                 }
 
                 mImage.close();
