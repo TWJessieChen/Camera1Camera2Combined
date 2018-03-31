@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements ICameraDataCallba
                         sICamera.onStart();
                         myVideoEncoderStream1.startCodec();
 
-                        mOCRServiceBinder.onStartOCR(settingData.getWidth(), settingData.getHeight(), settingData.getDisplayOrientation());
+//                        mOCRServiceBinder.onStartOCR(settingData.getWidth(), settingData.getHeight(), settingData.getDisplayOrientation());
                     }
                 });
 
@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity implements ICameraDataCallba
         Log.d(TAG,"camera2Callback");
 
         if(mOCRServiceBinder != null) {
-            mOCRServiceBinder.setOCRData(convertYUV420888ToNV21(data));
+//            mOCRServiceBinder.setOCRData(convertYUV420888ToNV21(data));
         }
     }
 

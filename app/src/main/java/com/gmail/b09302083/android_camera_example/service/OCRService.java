@@ -63,7 +63,7 @@ public class OCRService extends Service implements Serializable {
         super.onCreate();
         Log.d(TAG, "onCreate()");
 
-        createTextCaptureService();
+//        createTextCaptureService();
 
     }
 
@@ -114,6 +114,22 @@ public class OCRService extends Service implements Serializable {
 
             ocrData = buffer;
         }
+
+        /**
+         *
+         * NotReady : No content available.
+         *
+         * Tentative : Content detected on a single frame.
+         *
+         * Verified : Content verified: matching content found in at least two frames.
+         *
+         * Available : Matching content found in three or more frames. The content is recognized and the result is available, though the result can still vary with the addition of new frames.
+         *
+         * TentativelyStable : The result has been stable in the last two frames.
+         *
+         * Stable : The result has been stable in the last three or more frames.
+         *
+         * */
 
         @Override
         public void onFrameProcessed( ITextCaptureService.TextLine[] lines,
